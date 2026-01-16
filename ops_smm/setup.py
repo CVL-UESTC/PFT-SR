@@ -1,6 +1,7 @@
 import os
 import glob
 import torch
+from torch import cuda
 from torch.utils.cpp_extension import CUDA_HOME, CppExtension, CUDAExtension
 from setuptools import setup, find_packages
 
@@ -24,14 +25,34 @@ def get_extensions():
     if torch.cuda.is_available() and CUDA_HOME is not None:
         extension = CUDAExtension
         define_macros += [("WITH_CUDA", None)]
-        extra_compile_args["nvcc"] = [
-            "-gencode", "arch=compute_70,code=sm_70",
-            "-gencode", "arch=compute_75,code=sm_75",
-            "-gencode", "arch=compute_80,code=sm_80",  # For CUDA 11.7 and above
-            "-gencode", "arch=compute_86,code=sm_86",
-            "-gencode", "arch=compute_89,code=sm_89", # Comment this if CUDA version is too low
-            "-lineinfo",  # Output detailed debug information
+
+        # Auto-detect CUDA architectures
+        # Get all architectures supported by current CUDA environment
+        cuda_archs = cuda.get_gencode_flags().replace('compute=', 'arch=').split()
+        if not cuda_archs:
+            print(f"Warning: Failed to auto-detect CUDA architectures")
+            # Fallback to common architectures if auto-detection fails
+            cuda_archs = [
+                # "-gencode", "arch=compute_50,code=sm_50",  # Backward compatibility
+                # "-gencode", "arch=compute_60,code=sm_60",
+                # "-gencode", "arch=compute_70,code=sm_70",
+                # "-gencode", "arch=compute_75,code=sm_75",
+                "-gencode", "arch=compute_80,code=sm_80",
+                "-gencode", "arch=compute_86,code=sm_86",
+                "-gencode", "arch=compute_89,code=sm_89", # Comment this if CUDA version is too low
+            ]
+            print("Warning: Using fallback CUDA architectures")
+       
+        # Set CUDA compilation arguments
+        extra_compile_args["nvcc"] = cuda_archs + [
+            "-O3",  # Optimization level
+            "-Xcompiler", "-Wall",  # Pass warning options to compiler
+            "-lineinfo",  # Debug information
+            # "--ptxas-options=-v",  # Verbose output (for debugging)
+            # "--use_fast_math",  # Fast math operations
         ]
+        
+        print(f"Building with CUDA architectures: {cuda_archs}")
     else:
         raise NotImplementedError('CUDA is not available or not found.')
 
