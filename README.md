@@ -157,10 +157,11 @@ This code is built on [BasicSR](https://github.com/XPixelGroup/BasicSR) and [ATD
 ## Citation
 
 ```
-@article{long2025progressive,
+@inproceedings{long2025progressive,
   title={Progressive Focused Transformer for Single Image Super-Resolution},
   author={Long, Wei and Zhou, Xingyu and Zhang, Leheng and Gu, Shuhang},
-  journal={arXiv preprint arXiv:2503.20337},
+  booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+  pages={2279--2288},
   year={2025}
 }
 ```
